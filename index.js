@@ -9,6 +9,8 @@ var connectionString = 'postgres://localhost/booktown';
 //There's a way to construct a single client, but I only recommend using the 'pg'
 //module's client pooling feature.
 
+//Step 2
+
 //We pass the connect function our database connection string, and a callback function
 //'onConnect'. We will now define that function.
 pg.connect(connectionString, onConnect);
@@ -27,4 +29,24 @@ function onConnect(err, client, done) {
 
   //For now let's end client
   client.end();
+}
+
+//Step 3
+//We want to build a nice API for creating query code and functions to process
+//the data from queries. Let's use a combination of functional programming and
+//callbacks to acheive our API.
+//For this example let's keep our feature set limited. We will build an api for
+//selecting collections with an optional limit
+var _ = require('underscore');
+//Now we'll use the _.partial function to make a convience function called connectWithConnectionString.
+var connectWithConnectionString =  _.partial(pg.connect, connectionString);
+//connectWithConnectionString is still using pg.connect underneath. It will automatically apply the
+//connection string each time we call connectWithConnectionString. So now the API is
+//connectWithConnectionString(function(err, client, done) { //your code here })
+
+//OK Cool! So now when we want a PostgreSQL client we only need to worry about the callback
+//function. Can we do better? Yes, let's handle the connection 'err' object the same for
+//every callback
+function handleError(err, client, done, caller) {
+
 }
