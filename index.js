@@ -39,7 +39,7 @@ function onConnect(err, client, done) {
 //selecting collections with an optional limit
 var _ = require('underscore');
 //Now we'll use the _.partial function to make a convience function called connectWithConnectionString.
-var connectWithConnectionString =  _.partial(pg.connect, connectionString);
+var connectWithConnectionString =  _.bind(_.partial(pg.connect, connectionString), pg);
 //connectWithConnectionString is still using pg.connect underneath. It will automatically apply the
 //connection string each time we call connectWithConnectionString. So now the API is
 //connectWithConnectionString(function(err, client, done) { //your code here })
@@ -47,6 +47,46 @@ var connectWithConnectionString =  _.partial(pg.connect, connectionString);
 //OK Cool! So now when we want a PostgreSQL client we only need to worry about the callback
 //function. Can we do better? Yes, let's handle the connection 'err' object the same for
 //every callback
-function handleError(err, client, done, caller) {
 
+function buildSelectQuery(tableName) {
+  return ['select * from', tableName].join(' ');
 }
+
+function buildQueryClient(query) {
+  return function(onQueryReturn) {
+    connectWithConnectionString(function(err, client, done) {
+      if (err) {
+        return onQueryReturn(new Error(['Database Connection Failed with Error', err.toString()].join(' ')));
+      } else {
+        client.query(query, function(err, results) {
+          done();
+          onQueryReturn(err, results);
+        });
+      }
+    });
+  }
+}
+
+function selectAll(tableName) {
+  return function(onSelectReturn) {
+    var sql = buildSelectQuery(tableName);
+    var queryClient = buildQueryClient(sql);
+    queryClient(function(err, tableValues) {
+      if (err) {
+        return onSelectReturn(new Error(['Select all failed on', tableName, 'with error', err.toString()].join(' ')));
+      } else {
+        return onSelectReturn(null, tableValues);
+      }
+    });
+  }
+}
+
+var selectAllShipments = selectAll('shipments');
+selectAllShipments(function(err, shipments) {
+  if (err) {
+    //Handle select shipments failure;
+    console.error(err)
+  } else {
+    console.log(shipments.rows);
+  }
+});
