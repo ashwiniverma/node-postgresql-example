@@ -1,0 +1,22 @@
+{
+  "name": "node-postgresql-example",
+  "version": "1.0.0",
+  "description": "Example Repository for http://www.wlaurance.com/2016/03/node.js-postgresql-example/",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wlaurance/node-postgresql-example.git"
+  },
+  "author": "Will S Laurance",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/wlaurance/node-postgresql-example/issues"
+  },
+  "homepage": "https://github.com/wlaurance/node-postgresql-example#readme",
+  "dependencies": {
+    "pg": "^4.5.1"
+  }
+}
