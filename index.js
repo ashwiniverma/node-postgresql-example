@@ -59,8 +59,9 @@ function buildQueryClient(query) {
         return onQueryReturn(new Error(['Database Connection Failed with Error', err.toString()].join(' ')));
       } else {
         client.query(query, function(err, results) {
-          done();
           onQueryReturn(err, results);
+          client.end();
+          done();
         });
       }
     });
