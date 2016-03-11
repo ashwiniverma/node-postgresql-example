@@ -55,7 +55,6 @@ function buildSelectQuery(tableName) {
 function buildQueryClient(query) {
   return function(onQueryReturn) {
     connectWithConnectionString(function(err, client, done) {
-      console.log(done.toString())
       if (err) {
         return onQueryReturn(new Error(['Database Connection Failed with Error', err.toString()].join(' ')));
       } else {
@@ -120,12 +119,30 @@ authorCtrl.selectAll(printRows('Im from the Author Controller'));
 
 //In this API we want to build a runnable Query that will return at most N books
 var selectAtMostNBooks = buildDynamicQuery([
-  ['select * from books'],
-  ['limit $1']
+  'select * from books',
+  'limit $1'
 ]);
 
 //Now we can call this function with the first parameter being our limit
-selectAtMostNBooks(5, printRows("Selecting at most 5 books"));
+var selectAtMost5Books = selectAtMostNBooks(5);
+selectAtMost5Books(printRows('Select at most 5 books'));
+
+
+//Ok great you say. Now how to we implement the buildDynamicQuery function?
+function buildDynamicQuery(statements) {
+  return function () {
+    var parameters = _.toArray(arguments)
+    return function (onQueryReturn) {
+      var reg = new RegExp(/\$\d+/);
+      var sql = statements.join(' ');
+      _.each(parameters, function(p, i) {
+        sql = sql.replace('$' + (i + 1), p);
+      });
+      var queryClient = buildQueryClient(sql);
+      return queryClient(onQueryReturn);
+    }
+  }
+}
 
 
 
