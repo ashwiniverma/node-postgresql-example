@@ -85,7 +85,7 @@ var printRows = function(text) {
   return function(err, results) {
     if (err) console.error(err)
     else console.log(results.rows);
-    console.log(text);
+    if (text) console.log(text);
   }
 }
 
