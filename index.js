@@ -55,13 +55,13 @@ function buildSelectQuery(tableName) {
 function buildQueryClient(query) {
   return function(onQueryReturn) {
     connectWithConnectionString(function(err, client, done) {
+      console.log(done.toString())
       if (err) {
         return onQueryReturn(new Error(['Database Connection Failed with Error', err.toString()].join(' ')));
       } else {
         client.query(query, function(err, results) {
+          done(err);
           onQueryReturn(err, results);
-          client.end();
-          done();
         });
       }
     });
@@ -82,16 +82,30 @@ function selectAll(tableName) {
   }
 }
 
-var selectAllShipments = selectAll('shipments');
-selectAllShipments(function(err, shipments) {
-  if (err) {
-    //Handle select shipments failure;
-    console.error(err)
-  } else {
-    console.log(shipments.rows);
+var printRows = function() {
+  return function(err, results) {
+    if (err) console.error(err)
+    else console.log(results.rows);
   }
-});
-
-function Shipments() {
-  //Shipments.prototype
 }
+
+var selectAllShipments = selectAll('shipments');
+selectAllShipments(printRows());
+
+//Step 4 - Building on this API
+//Now when you want to select all rows from other collections you can build
+//a function using selectAll.
+var selectAllBooks = selectAll('books')
+selectAllBooks(printRows())
+
+
+
+
+
+
+
+
+
+
+//This code will shutdown the 'pg' module's pool so the program exits
+setTimeout(pg.end.apply(pg), 5000);
