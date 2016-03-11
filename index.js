@@ -129,6 +129,12 @@ selectAtMost5Books(printRows('Select at most 5 books'));
 
 
 //Ok great you say. Now how to we implement the buildDynamicQuery function?
+//Each step we are generating another function
+//First we take in the sql statements. We return a function that accepts the
+//parameters. Running this function with the values for a query returns a function
+//for actually executing the sql. Here you pass in the error/result handler.
+//You'll notice because of closure properties we can capture the variables.
+//We don't actually construct the sql query until the query is actually run.
 function buildDynamicQuery(statements) {
   return function () {
     var parameters = _.toArray(arguments)
