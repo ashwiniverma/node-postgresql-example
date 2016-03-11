@@ -113,6 +113,20 @@ AuthorCtrl.prototype.selectAll = selectAllAuthors;
 var authorCtrl = new AuthorCtrl();
 authorCtrl.selectAll(printRows('Im from the Author Controller'));
 
+//Step 5 - Building a limit clause API
+//If you take a look at our 'functional' functions and function returning
+//functions, you'll notice that it's very specific to select all of a particular
+//table. Let's build our functional API a little different now.
+
+//In this API we want to build a runnable Query that will return at most N books
+var selectAtMostNBooks = buildDynamicQuery([
+  ['select * from books'],
+  ['limit $1']
+]);
+
+//Now we can call this function with the first parameter being our limit
+selectAtMostNBooks(5, printRows("Selecting at most 5 books"));
+
 
 
 
