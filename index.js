@@ -82,10 +82,11 @@ function selectAll(tableName) {
   }
 }
 
-var printRows = function() {
+var printRows = function(text) {
   return function(err, results) {
     if (err) console.error(err)
     else console.log(results.rows);
+    console.log(text);
   }
 }
 
@@ -97,6 +98,20 @@ selectAllShipments(printRows());
 //a function using selectAll.
 var selectAllBooks = selectAll('books')
 selectAllBooks(printRows())
+var selectAllAuthors = selectAll('authors')
+selectAllAuthors(printRows());
+//You get the idea. We use the selectAll function generating function to build
+//specifically named functions. These functions could be made into methods on
+//their appropriate objects.
+
+//Author Function
+function AuthorCtrl() {
+
+}
+AuthorCtrl.prototype.selectAll = selectAllAuthors;
+//Try using the AuthorCtrl.selectAllMethod
+var authorCtrl = new AuthorCtrl();
+authorCtrl.selectAll(printRows('Im from the Author Controller'));
 
 
 
