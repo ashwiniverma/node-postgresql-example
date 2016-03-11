@@ -91,3 +91,7 @@ selectAllShipments(function(err, shipments) {
     console.log(shipments.rows);
   }
 });
+
+function Shipments() {
+  //Shipments.prototype
+}
