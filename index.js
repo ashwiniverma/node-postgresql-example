@@ -150,6 +150,12 @@ function buildDynamicQuery(statements) {
   }
 }
 
+//Step 6 building advanced functions
+var getOurCostOfCurrentInventory = buildDynamicQuery([
+  'select sum(cost * stock) from stock'
+])(/* No parameters */);
+getOurCostOfCurrentInventory(printRows('cost of inventory'))
+
 
 
 
