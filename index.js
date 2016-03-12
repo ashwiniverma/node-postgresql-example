@@ -1,13 +1,16 @@
-//First we need to require the 'pg' module
+//First we 'require' the 'pg' module
 var pg = require('pg');
-//Next we define a connection string. This string follows a syntax to provide the
-//connection protocol, username, password, host, post, and database name. For a
+//Next we define a connection string. The string contains the
+connection protocol, username, password, host, post, and database name.
+
+For a
 //localhost database it is simple
 var connectionString = 'postgres://localhost/booktown';
 
 //Now we access a PostgreSQL client
-//There's a way to construct a single client, but I only recommend using the 'pg'
-//module's client pooling feature.
+
+
+//We use the 'pg' modules' recommended client pooling API
 
 //Step 2
 
@@ -16,27 +19,19 @@ var connectionString = 'postgres://localhost/booktown';
 pg.connect(connectionString, onConnect);
 
 function onConnect(err, client, done) {
-  //Err - This means something went wrong connecting to the database. The credentials
-  //may be incorrect, the host down, and database doesn't exist.
-  //For now, let's console.error this message if it exists and exit the process
-  //with a non zero error code.
+  //Err - This means something went wrong connecting to the database.
   if (err) {
     console.error(err);
     process.exit(1);
   }
-  //Now we have a 'client' and a 'done' callback.
-  //We can use the client to run sql queries for booktown.
 
   //For now let's end client
   client.end();
 }
 
 //Step 3
-//We want to build a nice API for creating query code and functions to process
-//the data from queries. Let's use a combination of functional programming and
-//callbacks to acheive our API.
-//For this example let's keep our feature set limited. We will build an api for
-//selecting collections with an optional limit
+//An API for selecting all or some members of a collection.
+
 var _ = require('underscore');
 //Now we'll use the _.partial function to make a convience function called connectWithConnectionString.
 var connectWithConnectionString =  _.bind(_.partial(pg.connect, connectionString), pg);
@@ -67,6 +62,7 @@ function buildQueryClient(query) {
   }
 }
 
+//Selects all of the supplied tableName
 function selectAll(tableName) {
   return function(onSelectReturn) {
     var sql = buildSelectQuery(tableName);
@@ -81,6 +77,7 @@ function selectAll(tableName) {
   }
 }
 
+//Convience function to handle errors in callback functions.
 var errorCheck = function(cb) {
   return function(err, result) {
     if (err) {
@@ -92,6 +89,8 @@ var errorCheck = function(cb) {
   }
 }
 
+//Handles callback errors using `errorCheck` and printRows with
+//optional text.
 var printRows = function(text) {
   return errorCheck(function(results) {
     console.log(results.rows);
@@ -110,8 +109,7 @@ selectAllBooks(printRows())
 var selectAllAuthors = selectAll('authors')
 selectAllAuthors(printRows());
 //You get the idea. We use the selectAll function generating function to build
-//specifically named functions. These functions could be made into methods on
-//their appropriate objects.
+//named functions. On objects, these functions become methods.
 
 //Author Function
 function AuthorCtrl() {
@@ -124,27 +122,23 @@ authorCtrl.selectAll(printRows('Im from the Author Controller'));
 
 //Step 5 - Building a limit clause API
 //If you take a look at our 'functional' functions and function returning
-//functions, you'll notice that it's very specific to select all of a particular
+//functions, you'll notice that it's specific to select all a particular
 //table. Let's build our functional API a little different now.
 
-//In this API we want to build a runnable Query that will return at most N books
+//In this API we want to build a Query that returns at most N books
 var selectAtMostNBooks = buildDynamicQuery([
   'select * from books',
   'limit $1'
 ]);
 
-//Now we can call this function with the first parameter being our limit
+//Now we call this function with the limit parameter.
 var selectAtMost5Books = selectAtMostNBooks(5);
 selectAtMost5Books(printRows('Select at most 5 books'));
+//We build a function that accepts SQL statements. It returns
+//a function that accepts query parameters. It returns a function
+//to query. It accepts a callback function to handle query return values.
+//Closure properties capture the variables. The SQL string isn't //constructed until query execution.
 
-
-//Ok great you say. Now how to we implement the buildDynamicQuery function?
-//Each step we are generating another function
-//First we take in the sql statements. We return a function that accepts the
-//parameters. Running this function with the values for a query returns a function
-//for actually executing the sql. Here you pass in the error/result handler.
-//You'll notice because of closure properties we can capture the variables.
-//We don't actually construct the sql query until the query is actually run.
 function buildDynamicQuery(statements) {
   return function () {
     var parameters = _.toArray(arguments)
@@ -174,11 +168,12 @@ var getAuthorNameByBookTitle = buildDynamicQuery([
 ]);
 
 var getVelveteenRabbitAuthor = getAuthorNameByBookTitle('The Velveteen Rabbit');
-//or what you'd probably do with an API like this
+//You don't have to be so specific with function names.
 getAuthorNameByBookTitle('The Velveteen Rabbit')(errorCheck(function(result){
   console.log(result.rows[0]);
 }));
 
 
-//This code will shutdown the 'pg' module's pool so the program exits
+//This code ends the 'pg' module's pool after five seconds.
+//The process then exits because their are no more event listeners.
 setTimeout(pg.end.apply(pg), 5000);
