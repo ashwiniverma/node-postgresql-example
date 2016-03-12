@@ -81,12 +81,22 @@ function selectAll(tableName) {
   }
 }
 
-var printRows = function(text) {
-  return function(err, results) {
-    if (err) console.error(err)
-    else console.log(results.rows);
-    if (text) console.log(text);
+var errorCheck = function(cb) {
+  return function(err, result) {
+    if (err) {
+      console.error(err);
+      throw err;
+    } else {
+      cb(result);
+    }
   }
+}
+
+var printRows = function(text) {
+  return errorCheck(function(results) {
+    console.log(results.rows);
+    if (text) console.log(text);
+  });
 }
 
 var selectAllShipments = selectAll('shipments');
@@ -157,12 +167,17 @@ var getOurCostOfCurrentInventory = buildDynamicQuery([
 getOurCostOfCurrentInventory(printRows('cost of inventory'))
 
 
+var getAuthorNameByBookTitle = buildDynamicQuery([
+  "select concat(authors.first_name, ' ', authors.last_name) as author from authors",
+  "join books on books.author_id = authors.id",
+  "where books.title like '$1'"
+]);
 
-
-
-
-
-
+var getVelveteenRabbitAuthor = getAuthorNameByBookTitle('The Velveteen Rabbit');
+//or what you'd probably do with an API like this
+getAuthorNameByBookTitle('The Velveteen Rabbit')(errorCheck(function(result){
+  console.log(result.rows[0]);
+}));
 
 
 //This code will shutdown the 'pg' module's pool so the program exits
