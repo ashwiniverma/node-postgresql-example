@@ -1,19 +1,16 @@
 //First we 'require' the 'pg' module
 var pg = require('pg');
 //Next we define a connection string. The string contains the
-connection protocol, username, password, host, post, and database name.
+//connection protocol, username, password, host, post, and database name.
 
-For a
-//localhost database it is simple
+//A localhost PostgreSQL database's connection string is simple.
 var connectionString = 'postgres://localhost/booktown';
-
-//Now we access a PostgreSQL client
-
-
-//We use the 'pg' modules' recommended client pooling API
 
 //Step 2
 
+//Now we access a PostgreSQL client
+
+//We use the 'pg' module's recommended client pooling API
 //We pass the connect function our database connection string, and a callback function
 //'onConnect'. We will now define that function.
 pg.connect(connectionString, onConnect);
