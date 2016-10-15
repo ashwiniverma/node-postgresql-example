@@ -50,5 +50,5 @@ async.eachSeries([
         throw err;
     }
     console.log('Finished running lets explore queries.');
-    pool.close();
+    process.exit();
 });
