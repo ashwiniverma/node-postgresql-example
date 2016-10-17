@@ -1,5 +1,7 @@
 'use strict';
 
+const _ = require('underscore');
+
 //Database functions
 const pg = require('pg');
 
@@ -36,6 +38,8 @@ const args = yargs
     .alias('a', 'action')
     .demand('a')
     .describe('a', 'action to take [update, create]')
+    .alias('i', 'id')
+    .describe('i', 'customer id for an update')
     .argv;
 
 if (args.action === 'create') {
@@ -57,4 +61,47 @@ function create(options) {
         }
         process.exit();
     })
+}
+
+function update(options) {
+    if (!options.id) {
+        throw new Error('id is required for an update');
+    }
+    let fieldsToUpdate = [];
+    let valuesToUpdate = [];
+    if (options.firstName) {
+        fieldsToUpdate.push('first_name');
+        valuesToUpdate.push(options.firstName);
+    }
+    if (options.lastName) {
+        fieldsToUpdate.push('last_name');
+        valuesToUpdate.push(options.lastName);
+    }
+    if (options.email) {
+        fieldsToUpdate.push('email');
+        valuesToUpdate.push(options.email);
+    }
+    if (options.phone) {
+        fieldsToUpdate.push('phone');
+        valuesToUpdate.push(options.phone);
+    }
+    
+    if (fieldsToUpdate.length === 0 || valuesToUpdate.length === 0) {
+        throw new Error('no fields to update');
+    }
+    let placeHolderParams = (_.map(valuesToUpdate, (v, i) => { return `$${i + 1}`; })).join(', ');
+    let idWhereClause = `where id = $${valuesToUpdate.length + 1}`;
+    valuesToUpdate.push(options.id);
+    let query = `update customers set (${fieldsToUpdate.join(', ')}) = (${placeHolderParams}) ${idWhereClause}`;
+    runQuery(query, valuesToUpdate, (err, result) => {
+        if (err) {
+            console.error(err);
+        } else {
+            console.log(result);
+            if (result.rowCount === 0) {
+                console.error('No record updated');
+            }
+        }
+        process.exit();
+    });
 }
