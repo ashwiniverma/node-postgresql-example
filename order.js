@@ -68,14 +68,19 @@ function ensureRequired(map, fields, checkers) {
 }
 
 try {
+    var query;
+    var params;
     switch (args.action) {
         case 'create':
-            let query = 'insert into orders (created, creator) values ($1, $2) returning id';
-            let params = [new Date().toISOString(), process.env.USER];
+            query = 'insert into orders (created, creator) values ($1, $2) returning id';
+            params = [new Date().toISOString(), process.env.USER];
             runQuery(query, params, printer(['id']));
             break;
         case 'addItem':
             ensureRequired(args, ['orderId', 'bookId', 'quantity'], [_.isNumber, _.isNumber, _.isNumber]);
+            query = 'insert into line_items (order_id, book_id, quantity) values ($1, $2, $3) returning *';
+            params = [args.orderId, args.bookId, args.quantity];
+            runQuery(query, params, printer(['order_id', 'book_id', 'quantity']));
             break;
         case 'removeItem':
             break;
