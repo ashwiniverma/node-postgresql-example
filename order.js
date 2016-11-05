@@ -106,6 +106,15 @@ try {
             runQuery(query, params, printer(['order_id', 'created', 'creator', 'book_id', 'quantity', 'title']));
             break;
         case 'delete':
+            ensureRequired(args, ['orderId'], [_.isNumber]);
+            query = `
+                begin
+                delete from orders where id = $1
+                delete from line_items where order_id = $1
+                commit
+            `;
+            params = [args.orderId];
+            runQuery(query, params, printer(''));
             break;
         default:
             console.log('Action not supported');
