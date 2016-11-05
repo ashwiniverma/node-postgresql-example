@@ -42,7 +42,7 @@ function printer(fieldsToPrint) {
     return function(err, results) {
         if (err) {
             console.error(err);
-        } else {
+        } else if (fieldsToPrint) {
             console.log(fieldsToPrint.join('\t'));
             console.log('--------------------------------');
             _.each(results.rows, (r) => {
@@ -83,6 +83,10 @@ try {
             runQuery(query, params, printer(['order_id', 'book_id', 'quantity']));
             break;
         case 'removeItem':
+            ensureRequired(args, ['orderId', 'bookId'], [_.isNumber, _.isNumber]);
+            query = 'delete from line_items where order_id = $1 and book_id = $2';
+            params = [args.orderId, args.bookId,];
+            runQuery(query, params, printer());
             break;
         case 'updateItem':
             break;
