@@ -95,6 +95,15 @@ try {
             runQuery(query, params, printer());
             break;
         case 'list':
+            ensureRequired(args, ['orderId'], [_.isNumber]);
+            query = `
+                select order_id, created, creator, book_id, title, quantity from orders
+                    join line_items on orders.id = line_items.order_id
+                    join books on line_items.book_id = books.id
+                    where orders.id = $1;
+            `;
+            params = [args.orderId];
+            runQuery(query, params, printer(['order_id', 'created', 'creator', 'book_id', 'quantity', 'title']));
             break;
         case 'delete':
             break;
