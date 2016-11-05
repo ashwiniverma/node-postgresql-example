@@ -38,9 +38,28 @@ const args = yargs
     .describe('a', 'action to take [create, addItem, removeItem, updateItem, list, delete]')
     .argv;
 
+function printer(fieldsToPrint) {
+    return function(err, results) {
+        if (err) {
+            console.error(err);
+        } else {
+            console.log(fieldsToPrint.join('\t'));
+            console.log('--------------------------------');
+            _.each(results.rows, (r) => {
+                console.log((_.map(fieldsToPrint, (f) => {
+                    return r[f];
+                }).join('\t')));
+            });
+        }
+        process.exit();
+    }
+}
 
 switch (args.action) {
     case 'create':
+        let query = 'insert into orders (created, creator) values ($1, $2) returning id';
+        let params = [new Date().toISOString(), process.env.USER];
+        runQuery(query, params, printer(['id']));
         break;
     case 'addItem':
         break;
