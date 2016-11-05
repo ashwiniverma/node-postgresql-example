@@ -89,6 +89,10 @@ try {
             runQuery(query, params, printer());
             break;
         case 'updateItem':
+            ensureRequired(args, ['orderId', 'bookId', 'quantity'], [_.isNumber, _.isNumber, _.isNumber]);
+            query = 'update line_items set quantity = $1 where order_id = $2 and book_id = $3';
+            params = [args.quantity, args.orderId, args.bookId];
+            runQuery(query, params, printer());
             break;
         case 'list':
             break;
