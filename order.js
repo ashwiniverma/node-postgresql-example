@@ -55,22 +55,40 @@ function printer(fieldsToPrint) {
     }
 }
 
-switch (args.action) {
-    case 'create':
-        let query = 'insert into orders (created, creator) values ($1, $2) returning id';
-        let params = [new Date().toISOString(), process.env.USER];
-        runQuery(query, params, printer(['id']));
-        break;
-    case 'addItem':
-        break;
-    case 'removeItem':
-        break;
-    case 'updateItem':
-        break;
-    case 'list':
-        break;
-    case 'delete':
-        break;
-    default:
-        console.log('Action not supported');
+function ensureRequired(map, fields, checkers) {
+    if (fields.length !== checkers.length) {
+        throw 'invalid fields and checkers';
+    }
+    let valid = _.all(fields, (f, i) => {
+       return checkers[i](map[f]);
+    });
+    if (!valid) {
+        throw 'checkers did not pass'
+    }
+}
+
+try {
+    switch (args.action) {
+        case 'create':
+            let query = 'insert into orders (created, creator) values ($1, $2) returning id';
+            let params = [new Date().toISOString(), process.env.USER];
+            runQuery(query, params, printer(['id']));
+            break;
+        case 'addItem':
+            ensureRequired(args, ['orderId', 'bookId', 'quantity'], [_.isNumber, _.isNumber, _.isNumber]);
+            break;
+        case 'removeItem':
+            break;
+        case 'updateItem':
+            break;
+        case 'list':
+            break;
+        case 'delete':
+            break;
+        default:
+            console.log('Action not supported');
+    }
+} catch (e) {
+    console.error(e);
+    process.exit(1);
 }
