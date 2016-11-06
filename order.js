@@ -67,6 +67,12 @@ function ensureRequired(map, fields, checkers) {
     }
 }
 
+function rollback(client) {
+    client.query('ROLLBACK', function() {
+        client.end();
+    });
+}
+
 try {
     var query;
     var params;
@@ -107,14 +113,38 @@ try {
             break;
         case 'delete':
             ensureRequired(args, ['orderId'], [_.isNumber]);
-            query = `
-                begin
-                delete from orders where id = $1
-                delete from line_items where order_id = $1
-                commit
-            `;
             params = [args.orderId];
-            runQuery(query, params, printer(''));
+            pool.connect((err, client, done) => {
+                if (err) {
+                    throw err;
+                }
+                client.query('BEGIN', (err, result) => {
+                    if (err) {
+                        console.error(err);
+                        return rollback(client);
+                    }
+                    client.query('delete from line_items where order_id = $1', params, (err, result) => {
+                        if (result.rowCount > 0) {
+                            console.log('line items from order', args.orderId, 'deleted.');
+                        }
+                        if (err) {
+                            return rollback(client);
+                        }
+                        client.query('delete from orders where id = $1', params, (err, result) => {
+                            if (err) {
+                                console.error(err);
+                                return rollback(client);
+                            }
+                            if (result.rowCount === 0) {
+                                console.log('No order with id', args.orderId);
+                                return rollback(client);
+                            }
+                            console.log(result);
+                            client.query('COMMIT', client.end.bind(client));
+                        });
+                    });
+                })
+            });
             break;
         default:
             console.log('Action not supported');
