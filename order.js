@@ -38,18 +38,19 @@ const args = yargs
     .describe('a', 'action to take [create, addItem, removeItem, updateItem, list, delete]')
     .argv;
 
-function printer(fieldsToPrint) {
+require('console.table');
+
+function printer(words) {
     return function(err, results) {
         if (err) {
             console.error(err);
-        } else if (fieldsToPrint) {
-            console.log(fieldsToPrint.join('\t'));
-            console.log('--------------------------------');
-            _.each(results.rows, (r) => {
-                console.log((_.map(fieldsToPrint, (f) => {
-                    return r[f];
-                }).join('\t')));
-            });
+        } else {
+            if (words && words !== '') {
+                console.log(words);
+            }
+            if (results.rows.length > 0) {
+                console.table(results.rows);
+            }
         }
         process.exit();
     }
@@ -78,27 +79,27 @@ try {
     var params;
     switch (args.action) {
         case 'create':
-            query = 'insert into orders (created, creator) values ($1, $2) returning id';
+            query = 'insert into orders (created, creator) values ($1, $2) returning *';
             params = [new Date().toISOString(), process.env.USER];
-            runQuery(query, params, printer(['id']));
+            runQuery(query, params, printer('created order'));
             break;
         case 'addItem':
             ensureRequired(args, ['orderId', 'bookId', 'quantity'], [_.isNumber, _.isNumber, _.isNumber]);
             query = 'insert into line_items (order_id, book_id, quantity) values ($1, $2, $3) returning *';
             params = [args.orderId, args.bookId, args.quantity];
-            runQuery(query, params, printer(['order_id', 'book_id', 'quantity']));
+            runQuery(query, params, printer('added line item with book_id ' + args.bookId + ' to order_id ' + args.orderId));
             break;
         case 'removeItem':
             ensureRequired(args, ['orderId', 'bookId'], [_.isNumber, _.isNumber]);
             query = 'delete from line_items where order_id = $1 and book_id = $2';
-            params = [args.orderId, args.bookId, ];
-            runQuery(query, params, printer());
+            params = [args.orderId, args.bookId];
+            runQuery(query, params, printer('deleted line_items from order_id ' + args.orderId + ' with book_id ' + args.bookId));
             break;
         case 'updateItem':
             ensureRequired(args, ['orderId', 'bookId', 'quantity'], [_.isNumber, _.isNumber, _.isNumber]);
             query = 'update line_items set quantity = $1 where order_id = $2 and book_id = $3';
             params = [args.quantity, args.orderId, args.bookId];
-            runQuery(query, params, printer());
+            runQuery(query, params, printer('updated line_items for order_id ' + args.orderId));
             break;
         case 'list':
             ensureRequired(args, ['orderId'], [_.isNumber]);
@@ -106,10 +107,10 @@ try {
                 select order_id, created, creator, book_id, title, quantity from orders
                     join line_items on orders.id = line_items.order_id
                     join books on line_items.book_id = books.id
-                    where orders.id = $1;
+                    where orders.id = $1 returning *;
             `;
             params = [args.orderId];
-            runQuery(query, params, printer(['order_id', 'created', 'creator', 'book_id', 'quantity', 'title']));
+            runQuery(query, params, args.csv ? printCsv : printer())
             break;
         case 'delete':
             ensureRequired(args, ['orderId'], [_.isNumber]);
