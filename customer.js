@@ -18,8 +18,8 @@ function runQuery(query, argsArray, callback) {
             throw err;
         }
         client.query(query, argsArray, (err, results) => {
-           done();  //call done to release the client to the connection pool.
-           callback(err, results); //make it the callers responsiblity for checking for query errors.
+            done(); //call done to release the client to the connection pool.
+            callback(err, results); //make it the callers responsiblity for checking for query errors.
         });
     });
 }
@@ -43,9 +43,9 @@ const args = yargs
     .argv;
 
 if (args.action === 'create') {
-   create(args);
+    create(args);
 } else if (args.action == 'update') {
-   update(args);
+    update(args);
 } else {
     throw new Error('Action not supported');
 }
@@ -85,11 +85,13 @@ function update(options) {
         fieldsToUpdate.push('phone');
         valuesToUpdate.push(options.phone);
     }
-    
+
     if (fieldsToUpdate.length === 0 || valuesToUpdate.length === 0) {
         throw new Error('no fields to update');
     }
-    let placeHolderParams = (_.map(valuesToUpdate, (v, i) => { return `$${i + 1}`; })).join(', ');
+    let placeHolderParams = (_.map(valuesToUpdate, (v, i) => {
+        return `$${i + 1}`;
+    })).join(', ');
     let idWhereClause = `where id = $${valuesToUpdate.length + 1}`;
     valuesToUpdate.push(options.id);
     let query = `update customers set (${fieldsToUpdate.join(', ')}) = (${placeHolderParams}) ${idWhereClause}`;

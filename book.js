@@ -18,8 +18,8 @@ function runQuery(query, argsArray, callback) {
             throw err;
         }
         client.query(query, argsArray, (err, results) => {
-           done();  //call done to release the client to the connection pool.
-           callback(err, results); //make it the callers responsiblity for checking for query errors.
+            done(); //call done to release the client to the connection pool.
+            callback(err, results); //make it the callers responsiblity for checking for query errors.
         });
     });
 }
@@ -35,13 +35,13 @@ const args = yargs
 
 if (args.action === 'list') {
     runQuery('select id, title from books', [], (err, results) => {
-       if (err) {
-           throw err;
-       }
-       console.log('id', 'title');
-       _.each(results.rows, (r) => {
-           console.log(r.id, r.title);
-       });
-       process.exit();
+        if (err) {
+            throw err;
+        }
+        console.log('id', 'title');
+        _.each(results.rows, (r) => {
+            console.log(r.id, r.title);
+        });
+        process.exit();
     });
 }

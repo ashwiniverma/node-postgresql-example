@@ -18,8 +18,8 @@ function runQuery(query, argsArray, callback) {
             throw err;
         }
         client.query(query, argsArray, (err, results) => {
-           done();  //call done to release the client to the connection pool.
-           callback(err, results); //make it the callers responsiblity for checking for query errors.
+            done(); //call done to release the client to the connection pool.
+            callback(err, results); //make it the callers responsiblity for checking for query errors.
         });
     });
 }
@@ -60,7 +60,7 @@ function ensureRequired(map, fields, checkers) {
         throw 'invalid fields and checkers';
     }
     let valid = _.all(fields, (f, i) => {
-       return checkers[i](map[f]);
+        return checkers[i](map[f]);
     });
     if (!valid) {
         throw 'checkers did not pass'
@@ -91,7 +91,7 @@ try {
         case 'removeItem':
             ensureRequired(args, ['orderId', 'bookId'], [_.isNumber, _.isNumber]);
             query = 'delete from line_items where order_id = $1 and book_id = $2';
-            params = [args.orderId, args.bookId,];
+            params = [args.orderId, args.bookId, ];
             runQuery(query, params, printer());
             break;
         case 'updateItem':

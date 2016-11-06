@@ -16,14 +16,14 @@ var connectionString = 'postgres://localhost/booktown';
 pg.connect(connectionString, onConnect);
 
 function onConnect(err, client, done) {
-  //Err - This means something went wrong connecting to the database.
-  if (err) {
-    console.error(err);
-    process.exit(1);
-  }
+    //Err - This means something went wrong connecting to the database.
+    if (err) {
+        console.error(err);
+        process.exit(1);
+    }
 
-  //For now let's end client
-  client.end();
+    //For now let's end client
+    client.end();
 }
 
 //Step 3
@@ -31,7 +31,7 @@ function onConnect(err, client, done) {
 
 var _ = require('underscore');
 //Now we'll use the _.partial function to make a convience function called connectWithConnectionString.
-var connectWithConnectionString =  _.bind(_.partial(pg.connect, connectionString), pg);
+var connectWithConnectionString = _.bind(_.partial(pg.connect, connectionString), pg);
 //connectWithConnectionString is still using pg.connect underneath. It will automatically apply the
 //connection string each time we call connectWithConnectionString. So now the API is
 //connectWithConnectionString(function(err, client, done) { //your code here })
@@ -41,58 +41,58 @@ var connectWithConnectionString =  _.bind(_.partial(pg.connect, connectionString
 //every callback
 
 function buildSelectQuery(tableName) {
-  return ['select * from', tableName].join(' ');
+    return ['select * from', tableName].join(' ');
 }
 
 function buildQueryClient(query) {
-  return function(onQueryReturn) {
-    connectWithConnectionString(function(err, client, done) {
-      if (err) {
-        return onQueryReturn(new Error(['Database Connection Failed with Error', err.toString()].join(' ')));
-      } else {
-        client.query(query, function(err, results) {
-          done(err);
-          onQueryReturn(err, results);
+    return function(onQueryReturn) {
+        connectWithConnectionString(function(err, client, done) {
+            if (err) {
+                return onQueryReturn(new Error(['Database Connection Failed with Error', err.toString()].join(' ')));
+            } else {
+                client.query(query, function(err, results) {
+                    done(err);
+                    onQueryReturn(err, results);
+                });
+            }
         });
-      }
-    });
-  }
+    }
 }
 
 //Selects all of the supplied tableName
 function selectAll(tableName) {
-  return function(onSelectReturn) {
-    var sql = buildSelectQuery(tableName);
-    var queryClient = buildQueryClient(sql);
-    queryClient(function(err, tableValues) {
-      if (err) {
-        return onSelectReturn(new Error(['Select all failed on', tableName, 'with error', err.toString()].join(' ')));
-      } else {
-        return onSelectReturn(null, tableValues);
-      }
-    });
-  }
+    return function(onSelectReturn) {
+        var sql = buildSelectQuery(tableName);
+        var queryClient = buildQueryClient(sql);
+        queryClient(function(err, tableValues) {
+            if (err) {
+                return onSelectReturn(new Error(['Select all failed on', tableName, 'with error', err.toString()].join(' ')));
+            } else {
+                return onSelectReturn(null, tableValues);
+            }
+        });
+    }
 }
 
 //Convience function to handle errors in callback functions.
 var errorCheck = function(cb) {
-  return function(err, result) {
-    if (err) {
-      console.error(err);
-      throw err;
-    } else {
-      cb(result);
+    return function(err, result) {
+        if (err) {
+            console.error(err);
+            throw err;
+        } else {
+            cb(result);
+        }
     }
-  }
 }
 
 //Handles callback errors using `errorCheck` and printRows with
 //optional text.
 var printRows = function(text) {
-  return errorCheck(function(results) {
-    console.log(results.rows);
-    if (text) console.log(text);
-  });
+    return errorCheck(function(results) {
+        console.log(results.rows);
+        if (text) console.log(text);
+    });
 }
 
 var selectAllShipments = selectAll('shipments');
@@ -124,8 +124,8 @@ authorCtrl.selectAll(printRows('Im from the Author Controller'));
 
 //In this API we want to build a Query that returns at most N books
 var selectAtMostNBooks = buildDynamicQuery([
-  'select * from books',
-  'limit $1'
+    'select * from books',
+    'limit $1'
 ]);
 
 //Now we call this function with the limit parameter.
@@ -137,37 +137,37 @@ selectAtMost5Books(printRows('Select at most 5 books'));
 //Closure properties capture the variables. The SQL string isn't //constructed until query execution.
 
 function buildDynamicQuery(statements) {
-  return function () {
-    var parameters = _.toArray(arguments)
-    return function (onQueryReturn) {
-      var reg = new RegExp(/\$\d+/);
-      var sql = statements.join(' ');
-      _.each(parameters, function(p, i) {
-        sql = sql.replace('$' + (i + 1), p);
-      });
-      var queryClient = buildQueryClient(sql);
-      return queryClient(onQueryReturn);
+    return function() {
+        var parameters = _.toArray(arguments)
+        return function(onQueryReturn) {
+            var reg = new RegExp(/\$\d+/);
+            var sql = statements.join(' ');
+            _.each(parameters, function(p, i) {
+                sql = sql.replace('$' + (i + 1), p);
+            });
+            var queryClient = buildQueryClient(sql);
+            return queryClient(onQueryReturn);
+        }
     }
-  }
 }
 
 //Step 6 building advanced functions
 var getOurCostOfCurrentInventory = buildDynamicQuery([
-  'select sum(cost * stock) from stock'
-])(/* No parameters */);
+    'select sum(cost * stock) from stock'
+])( /* No parameters */ );
 getOurCostOfCurrentInventory(printRows('cost of inventory'))
 
 
 var getAuthorNameByBookTitle = buildDynamicQuery([
-  "select concat(authors.first_name, ' ', authors.last_name) as author from authors",
-  "join books on books.author_id = authors.id",
-  "where books.title like '$1'"
+    "select concat(authors.first_name, ' ', authors.last_name) as author from authors",
+    "join books on books.author_id = authors.id",
+    "where books.title like '$1'"
 ]);
 
 var getVelveteenRabbitAuthor = getAuthorNameByBookTitle('The Velveteen Rabbit');
 //You don't have to be so specific with function names.
-getAuthorNameByBookTitle('The Velveteen Rabbit')(errorCheck(function(result){
-  console.log(result.rows[0]);
+getAuthorNameByBookTitle('The Velveteen Rabbit')(errorCheck(function(result) {
+    console.log(result.rows[0]);
 }));
 
 
