@@ -56,6 +56,19 @@ function printer(words) {
     }
 }
 
+const json2csv = require('json2csv');
+
+function printCsv(err, results) {
+    if (err) {
+        console.error(err);
+    } else {
+        console.log(json2csv({
+            data: results.rows
+        }));
+    }
+    process.exit();
+}
+
 function ensureRequired(map, fields, checkers) {
     if (fields.length !== checkers.length) {
         throw 'invalid fields and checkers';
